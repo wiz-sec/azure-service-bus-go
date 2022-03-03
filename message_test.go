@@ -135,22 +135,22 @@ func (suite *serviceBusSuite) TestAMQPMessageToMessage() {
 	d := 30 * time.Second
 	until := time.Now().Add(d)
 	pID := int16(12)
-
+	n := uint32(1)
 	aMsg := &amqp.Message{
 		DeliveryTag: dotNetEncodedLockTokenGUID,
 		Properties: &amqp.MessageProperties{
 			MessageID:          "messageID",
-			To:                 "to",
-			Subject:            "subject",
-			ReplyTo:            "replyTo",
-			ReplyToGroupID:     "replyToGroupID",
-			CorrelationID:      "correlationID",
-			ContentType:        "contentType",
-			ContentEncoding:    "contentEncoding",
-			AbsoluteExpiryTime: until,
-			CreationTime:       until,
-			GroupID:            "groupID",
-			GroupSequence:      uint32(1),
+			To:                 strPtr("to"),
+			Subject:            strPtr("subject"),
+			ReplyTo:            strPtr("replyTo"),
+			ReplyToGroupID:     strPtr("replyToGroupID"),
+			CorrelationID:      strPtr("correlationID"),
+			ContentType:        strPtr("contentType"),
+			ContentEncoding:    strPtr("contentEncoding"),
+			AbsoluteExpiryTime: &until,
+			CreationTime:       &until,
+			GroupID:            strPtr("groupID"),
+			GroupSequence:      &n,
 		},
 		Annotations: amqp.Annotations{
 			"x-opt-locked-until":            until,

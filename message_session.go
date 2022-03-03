@@ -143,7 +143,7 @@ func (ms *MessageSession) SetState(ctx context.Context, state []byte) error {
 			"operation": "com.microsoft:set-session-state",
 		},
 		Properties: &amqp.MessageProperties{
-			GroupID: *ms.SessionID(),
+			GroupID: ms.SessionID(),
 		},
 		Value: map[string]interface{}{
 			"session-id":    ms.SessionID(),

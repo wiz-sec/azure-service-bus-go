@@ -118,7 +118,7 @@ func (mb *MessageBatch) Add(m *Message) (bool, error) {
 	}
 
 	if mb.SessionID != nil {
-		msg.Properties.GroupID = *mb.SessionID
+		msg.Properties.GroupID = mb.SessionID
 	}
 
 	bin, err := msg.MarshalBinary()

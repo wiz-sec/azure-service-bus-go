@@ -233,14 +233,14 @@ func (m *Message) Defer(ctx context.Context) error {
 }
 
 // Release will notify Azure Service Bus the message should be re-queued without failure.
-//func (m *Message) Release() DispositionAction {
+// func (m *Message) Release() DispositionAction {
 //	return func(ctx context.Context) {
 //		span, _ := m.startSpanFromContext(ctx, "sb.Message.Release")
 //		defer span.Finish()
 //
 //		m.message.Release()
 //	}
-//}
+// }
 
 // DeadLetter will notify Azure Service Bus the message failed and should not re-queued
 func (m *Message) DeadLetter(ctx context.Context, err error) error {
@@ -318,6 +318,20 @@ func (m *Message) GetKeyValues() map[string]interface{} {
 	return m.UserProperties
 }
 
+func strDeref(s *string) string {
+	if s != nil {
+		return *s
+	}
+	return ""
+}
+
+func strPtr(s string) *string {
+	if s == "" {
+		return nil
+	}
+	return &s
+}
+
 func sendMgmtDisposition(ctx context.Context, m *Message, state disposition) error {
 	ctx, span := startConsumerSpanFromContext(ctx, "sb.sendMgmtDisposition")
 	defer span.End()
@@ -349,19 +363,19 @@ func (m *Message) toMsg() (*amqp.Message, error) {
 	}
 
 	if m.SessionID != nil {
-		amqpMsg.Properties.GroupID = *m.SessionID
+		amqpMsg.Properties.GroupID = m.SessionID
 	}
 
 	if m.GroupSequence != nil {
-		amqpMsg.Properties.GroupSequence = *m.GroupSequence
+		amqpMsg.Properties.GroupSequence = m.GroupSequence
 	}
 
 	amqpMsg.Properties.CorrelationID = m.CorrelationID
-	amqpMsg.Properties.ContentType = m.ContentType
-	amqpMsg.Properties.Subject = m.Label
-	amqpMsg.Properties.To = m.To
-	amqpMsg.Properties.ReplyTo = m.ReplyTo
-	amqpMsg.Properties.ReplyToGroupID = m.ReplyToGroupID
+	amqpMsg.Properties.ContentType = strPtr(m.ContentType)
+	amqpMsg.Properties.Subject = strPtr(m.Label)
+	amqpMsg.Properties.To = strPtr(m.To)
+	amqpMsg.Properties.ReplyTo = strPtr(m.ReplyTo)
+	amqpMsg.Properties.ReplyToGroupID = strPtr(m.ReplyToGroupID)
 
 	if len(m.UserProperties) > 0 {
 		amqpMsg.ApplicationProperties = make(map[string]interface{})
@@ -422,16 +436,16 @@ func newMessage(data []byte, amqpMsg *amqp.Message, r *amqp.Receiver) (*Message,
 		if id, ok := amqpMsg.Properties.MessageID.(string); ok {
 			msg.ID = id
 		}
-		msg.SessionID = &amqpMsg.Properties.GroupID
-		msg.GroupSequence = &amqpMsg.Properties.GroupSequence
+		msg.SessionID = amqpMsg.Properties.GroupID
+		msg.GroupSequence = amqpMsg.Properties.GroupSequence
 		if id, ok := amqpMsg.Properties.CorrelationID.(string); ok {
 			msg.CorrelationID = id
 		}
-		msg.ContentType = amqpMsg.Properties.ContentType
-		msg.Label = amqpMsg.Properties.Subject
-		msg.To = amqpMsg.Properties.To
-		msg.ReplyTo = amqpMsg.Properties.ReplyTo
-		msg.ReplyToGroupID = amqpMsg.Properties.ReplyToGroupID
+		msg.ContentType = strDeref(amqpMsg.Properties.ContentType)
+		msg.Label = strDeref(amqpMsg.Properties.Subject)
+		msg.To = strDeref(amqpMsg.Properties.To)
+		msg.ReplyTo = strDeref(amqpMsg.Properties.ReplyTo)
+		msg.ReplyToGroupID = strDeref(amqpMsg.Properties.ReplyToGroupID)
 		if amqpMsg.Header != nil {
 			msg.DeliveryCount = amqpMsg.Header.DeliveryCount + 1
 			msg.TTL = &amqpMsg.Header.TTL
